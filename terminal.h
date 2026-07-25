@@ -8,6 +8,7 @@
 #define ANSI_CLEAR_LINE "\033[2K"
 
 #define ANSI_HOME "\033[H"
+#define ANSI_BOLD "\033[1m"
 
 #define ANSI_RED "\033[31m"
 #define ANSI_GREEN "\033[32m"

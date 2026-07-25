@@ -4,9 +4,11 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/wait.h>
+#include <signal.h>
+#include <string.h>
 #include "utils.h"
 #include "terminal.h"
-#include <signal.h>
+#include "help.h"
 
 static volatile sig_atomic_t timeout_hit = 0;
 
@@ -28,6 +30,11 @@ int main(int argc, char *argv[])
     {
         fprintf(stderr, ANSI_RED "You need to pass arguments, use -h for help.\n" ANSI_RESET);
         exit(EXIT_FAILURE);
+    }
+    else if (argc == 2 && (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0))
+    {
+        fputs(HELP_TEXT, stdout);
+        exit(EXIT_SUCCESS);
     }
     else if (argc < 3)
     {
