@@ -1,24 +1,28 @@
 CC = clang
-
 CFLAGS = -Wall -g -O2 -MMD -MP
 
-TARGET = tout
+BIN_DIR = ./binary
+BUILD_DIR = ./build
+
+TARGET = $(BIN_DIR)/tout
 
 SRCS = $(wildcard *.c)
-OBJS = $(SRCS:.c=.o)
-DEPS = $(SRCS:.c=.d)
+OBJS = $(patsubst %.c, $(BUILD_DIR)/%.o, $(SRCS))
+DEPS = $(OBJS:.o=.d)
 
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
+	mkdir -p $(BIN_DIR)
 	$(CC) $(CFLAGS) -o $(TARGET) $(OBJS)
 
-%.o: %.c
+$(BUILD_DIR)/%.o: %.c
+	mkdir -p $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 -include $(DEPS)
 
 clean:
-	rm -f $(OBJS) $(TARGET)
+	rm -rf $(BIN_DIR) $(BUILD_DIR)
 
 .PHONY: all clean
