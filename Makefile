@@ -1,28 +1,38 @@
 CC = clang
-CFLAGS = -Wall -g -O2 -MMD -MP
 
-BIN_DIR = ./binary
-BUILD_DIR = ./build
+WARNINGS = -Wall -Wextra -Wpedantic
+DEBUG_FLAGS = -g -O0
+RELEASE_FLAGS = -O2 -DNDEBUG
+DEPFLAGS = -MMD -MP
+
+CFLAGS = $(WARNINGS) $(DEBUG_FLAGS) $(DEPFLAGS)
+
+BIN_DIR = binary
+BUILD_DIR = build
 
 TARGET = $(BIN_DIR)/tout
 
 SRCS = $(wildcard *.c)
-OBJS = $(patsubst %.c, $(BUILD_DIR)/%.o, $(SRCS))
+OBJS = $(patsubst %.c,$(BUILD_DIR)/%.o,$(SRCS))
 DEPS = $(OBJS:.o=.d)
 
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
 	mkdir -p $(BIN_DIR)
-	$(CC) $(CFLAGS) -o $(TARGET) $(OBJS)
+	$(CC) $(OBJS) -o $@
 
 $(BUILD_DIR)/%.o: %.c
 	mkdir -p $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
--include $(DEPS)
+release: CFLAGS = $(WARNINGS) $(RELEASE_FLAGS) $(DEPFLAGS)
+release: clean all
+	strip $(TARGET)
 
 clean:
-	rm -rf $(BIN_DIR) $(BUILD_DIR)
+	rm -rf $(BUILD_DIR) $(BIN_DIR)
 
-.PHONY: all clean
+-include $(DEPS)
+
+.PHONY: all release clean
