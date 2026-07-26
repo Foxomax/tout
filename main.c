@@ -1,20 +1,18 @@
-#include <signal.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
 #include <sys/wait.h>
 #include <signal.h>
-#include <string.h>
 #include "utils.h"
 #include "terminal.h"
 #include "help.h"
+#include "errors.h"
 
 static volatile sig_atomic_t timeout_hit = 0;
 
 struct task_config
 {
-    int timeout;
+    long timeout;
     StringVector commands;
 };
 
@@ -28,37 +26,61 @@ int main(int argc, char *argv[])
 {
     if (argc <= 1)
     {
-        fprintf(stderr, ANSI_RED "You need to pass arguments, use -h for help.\n" ANSI_RESET);
+        fprintf(stderr, "%s", NO_ARGUMENTS_ERROR);
         exit(EXIT_FAILURE);
     }
-    else if (argc == 2 && (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0))
+    else if (argc == 2 && is_help_flag(argv[1]))
     {
         fputs(HELP_TEXT, stdout);
         exit(EXIT_SUCCESS);
     }
     else if (argc < 3)
     {
-        fprintf(stderr, ANSI_RED "Error, you need to pass 2 arguments [timeout, command]\n" ANSI_RESET);
+        fprintf(stderr, "%s", ARGUMENT_ERROR);
+        exit(EXIT_FAILURE);
+    }
+    struct task_config cfg;
+
+    if ((cfg.timeout = parsing_to_long(argv[1])) <= 0)
+    {
+        fprintf(stderr, "%s", PARSING_TIMEOUT_ERROR);
         exit(EXIT_FAILURE);
     }
 
-    struct sigaction wake_up;
+    if (init_vector(&cfg.commands) != 0)
+    {
+        fprintf(stderr, "%s", OOM_ERROR);
+        exit(EXIT_FAILURE);
+    }
+
+    struct sigaction wake_up = {0};
     wake_up.sa_handler = handle_alarm;
 
     sigemptyset(&wake_up.sa_mask);
 
-    sigaction(SIGALRM, &wake_up, NULL);
-
-    struct task_config cfg;
-    cfg.timeout = atoi(argv[1]);
-    init_vector(&cfg.commands);
+    if (sigaction(SIGALRM, &wake_up, NULL) < 0)
+    {
+        free_vector(&cfg.commands);
+        fprintf(stderr, "Error registering sigaction");
+        exit(EXIT_FAILURE);
+    }
 
     for (int i = 2; i < argc; i++)
     {
-        add_element(&cfg.commands, argv[i]);
+        if (add_element(&cfg.commands, argv[i]) == -1)
+        {
+            free_vector(&cfg.commands);
+            fprintf(stderr, "%s", OOM_ERROR);
+            exit(EXIT_FAILURE);
+        }
     }
 
-    add_element(&cfg.commands, NULL);
+    if (add_element(&cfg.commands, NULL) == -1)
+    {
+        free_vector(&cfg.commands);
+        fprintf(stderr, "%s", OOM_ERROR);
+        exit(EXIT_FAILURE);
+    }
 
     pid_t pid;
     pid = fork();
