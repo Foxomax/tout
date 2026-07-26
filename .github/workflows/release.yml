@@ -51,6 +51,9 @@ jobs:
     needs: build
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
@@ -59,7 +62,21 @@ jobs:
       - name: Display files
         run: find artifacts -type f
 
+      - name: Extract release notes
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+
+          awk "
+          /^## \\[$VERSION\\]/ {flag=1; next}
+          /^## \\[/ && flag {exit}
+          flag
+          " CHANGELOG.md > RELEASE_NOTES.md
+
+          echo "Release notes:"
+          cat RELEASE_NOTES.md
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          body_path: RELEASE_NOTES.md
           files: artifacts/**/*
