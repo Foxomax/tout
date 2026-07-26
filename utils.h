@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 
 typedef struct
 {
@@ -7,8 +8,10 @@ typedef struct
     size_t capacity;
 } StringVector;
 
-void init_vector(StringVector *vec);
+int init_vector(StringVector *vec);
 
-void add_element(StringVector *vec, const char *str);
+int add_element(StringVector *vec, const char *str);
 
 void free_vector(StringVector *vec);
+
+long parsing_to_long(const char *str);
