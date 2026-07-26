@@ -9,4 +9,8 @@ extern const char OOM_ERROR[];
 
 extern const char PARSING_TIMEOUT_ERROR[];
 
+extern const char SIGACTION_ERROR[];
+
+extern const char TIMEOUT_ERROR[];
+
 #endif

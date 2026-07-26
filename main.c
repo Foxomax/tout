@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
     if (sigaction(SIGALRM, &wake_up, NULL) < 0)
     {
         free_vector(&cfg.commands);
-        fprintf(stderr, "Error registering sigaction");
+        fprintf(stderr, "%s", SIGACTION_ERROR);
         exit(EXIT_FAILURE);
     }
 
@@ -94,7 +94,12 @@ int main(int argc, char *argv[])
 
     if (pid == 0)
     {
-        setpgid(0, 0);
+        if (setpgid(0, 0) < 0)
+        {
+            perror("setpgid child failed");
+            free_vector(&cfg.commands);
+            exit(EXIT_FAILURE);
+        }
         execvp(cfg.commands.items[0], cfg.commands.items);
         perror("execvp failed");
         free_vector(&cfg.commands);
@@ -102,7 +107,10 @@ int main(int argc, char *argv[])
     }
     else
     {
-        setpgid(pid, pid);
+        if (setpgid(pid, pid) < 0 && errno != EACCES && errno != ESRCH)
+        {
+            perror("setpgid parent failed");
+        }
     }
 
     alarm(cfg.timeout);
@@ -120,14 +128,22 @@ int main(int argc, char *argv[])
 
     if (timeout_hit)
     {
-        fprintf(stderr, ANSI_RED "Timeout exceeded...\n" ANSI_RESET);
+        fprintf(stderr, "%s", TIMEOUT_ERROR);
 
-        kill(-pid, SIGTERM);
+        if (kill(-pid, SIGTERM) < 0 && errno != ESRCH)
+        {
+            perror("kill(SIGTERM) failed");
+        }
+
         usleep(100000);
 
         if (waitpid(pid, &status, WNOHANG) == 0)
         {
-            kill(-pid, SIGKILL);
+            if (kill(-pid, SIGKILL) < 0 && errno != ESRCH)
+            {
+                perror("kill(SIGKILL) failed");
+            }
+
             waitpid(pid, &status, 0);
         }
 

@@ -23,7 +23,7 @@ int is_help_flag(char *flag)
     int flag_match = 0;
     StringVector allowed_flags;
     generate_help_flags(&allowed_flags);
-    for (int i = 0; i < allowed_flags.count; i++)
+    for (size_t i = 0; i < allowed_flags.count; i++)
     {
         if (strcmp(allowed_flags.items[i], flag))
         {

@@ -1,4 +1,5 @@
 #include "terminal.h"
+#include "errors.h"
 
 const char ARGUMENT_ERROR[] = ANSI_RED
     "Error, you need to pass 2 arguments [timeout, command]\n" ANSI_RESET;
@@ -11,3 +12,8 @@ const char OOM_ERROR[] = ANSI_RED
 
 const char PARSING_TIMEOUT_ERROR[] = ANSI_RED
     "Error in parsing timeout\n" ANSI_RESET;
+
+const char SIGACTION_ERROR[] = ANSI_RED
+    "Error registering sigaction\n" ANSI_RESET;
+
+const char TIMEOUT_ERROR[] = ANSI_RED "Timeout exceeded...\n" ANSI_RESET;
