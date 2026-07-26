@@ -25,7 +25,7 @@ int is_help_flag(char *flag)
     generate_help_flags(&allowed_flags);
     for (size_t i = 0; i < allowed_flags.count; i++)
     {
-        if (strcmp(allowed_flags.items[i], flag))
+        if (strcmp(allowed_flags.items[i], flag) == 0)
         {
             flag_match = 1;
             break;
