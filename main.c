@@ -72,11 +72,15 @@ int main(int argc, char *argv[])
 
     if (pid == 0)
     {
+        setpgid(0, 0);
         execvp(cfg.commands.items[0], cfg.commands.items);
-
         perror("execvp failed");
         free_vector(&cfg.commands);
         exit(EXIT_FAILURE);
+    }
+    else
+    {
+        setpgid(pid, pid);
     }
 
     alarm(cfg.timeout);
@@ -96,12 +100,12 @@ int main(int argc, char *argv[])
     {
         fprintf(stderr, ANSI_RED "Timeout exceeded...\n" ANSI_RESET);
 
-        kill(pid, SIGTERM);
+        kill(-pid, SIGTERM);
         usleep(100000);
 
         if (waitpid(pid, &status, WNOHANG) == 0)
         {
-            kill(pid, SIGKILL);
+            kill(-pid, SIGKILL);
             waitpid(pid, &status, 0);
         }
 
